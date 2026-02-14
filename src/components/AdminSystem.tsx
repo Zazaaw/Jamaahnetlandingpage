@@ -25,7 +25,7 @@ const adminFeatures = [
   },
   {
     icon: AlertTriangle,
-    title: "Take-down Konten",
+    title: "Takedown Konten",
     description: "Penghapusan konten yang melanggar ketentuan",
   },
   {

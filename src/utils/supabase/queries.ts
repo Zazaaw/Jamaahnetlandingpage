@@ -9,13 +9,12 @@ import type {
 } from "./client";
 
 // ============================================
-// MEMBERS QUERIES (Tabel: profiles)
+// MEMBERS QUERIES
 // ============================================
 
 export async function getMembers() {
-  // Mengambil data dari tabel 'profiles'
   const { data, error } = await supabase
-    .from("profiles")
+    .from("members")
     .select("*")
     .order("created_at", { ascending: false });
 
@@ -25,7 +24,7 @@ export async function getMembers() {
 
 export async function getMemberById(id: string) {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("members")
     .select("*")
     .eq("id", id)
     .single();
@@ -36,8 +35,8 @@ export async function getMemberById(id: string) {
 
 export async function approveMember(id: string) {
   const { data, error } = await supabase
-    .from("profiles")
-    .update({ status: "active" }) // Mengubah status jadi active
+    .from("members")
+    .update({ status: "active" })
     .eq("id", id)
     .select()
     .single();
@@ -48,8 +47,8 @@ export async function approveMember(id: string) {
 
 export async function rejectMember(id: string) {
   const { data, error } = await supabase
-    .from("profiles")
-    .update({ status: "suspended" }) // Di app statusnya 'suspended', bukan rejected
+    .from("members")
+    .update({ status: "rejected" })
     .eq("id", id)
     .select()
     .single();
@@ -58,21 +57,25 @@ export async function rejectMember(id: string) {
   return data as Member;
 }
 
-// NOTE: Reset password tidak bisa update table manual di Supabase Auth.
-// Harus menggunakan supabase.auth.admin.updateUserById (butuh Service Role)
-// Function ini saya matikan sementara agar tidak error logic.
 export async function resetMemberPassword(id: string, newPasswordHash: string) {
-  console.warn("Reset password harus melalui Supabase Auth Admin API");
-  return null;
+  const { data, error } = await supabase
+    .from("members")
+    .update({ password_hash: newPasswordHash })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Member;
 }
 
 export async function getMemberStats() {
   const { count: totalMembers } = await supabase
-    .from("profiles")
+    .from("members")
     .select("*", { count: "exact", head: true });
 
   const { count: pendingMembers } = await supabase
-    .from("profiles")
+    .from("members")
     .select("*", { count: "exact", head: true })
     .eq("status", "pending");
 
@@ -83,39 +86,33 @@ export async function getMemberStats() {
 }
 
 // ============================================
-// CONTENTS QUERIES (Tabel: timeline_posts)
+// CONTENTS QUERIES
 // ============================================
 
 export async function getContents() {
-  // Join ke tabel profiles menggunakan user_id
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("contents")
     .select(`
       *,
-      profiles:user_id (
-        name,
-        member_id,
-        avatar_url
+      members:member_id (
+        name
       )
     `)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
 
-  // Mapping data biar enak dibaca frontend admin
+  // Format data to include member_name
   return (data || []).map((item: any) => ({
     ...item,
-    member_name: item.profiles?.name || "Unknown",
-    member_id_display: item.profiles?.member_id || "-",
+    member_name: item.members?.name || "Unknown",
   })) as Content[];
 }
 
 export async function approveContent(id: string) {
-  // Asumsi kamu sudah menambah kolom 'status' di timeline_posts
-  // Jika belum ada, query ini mungkin error. Pastikan tambah kolom status dulu.
   const { data, error } = await supabase
-    .from("timeline_posts")
-    .update({ visibility: "public" }) // Atau update status: 'approved'
+    .from("contents")
+    .update({ status: "approved" })
     .eq("id", id)
     .select()
     .single();
@@ -126,8 +123,8 @@ export async function approveContent(id: string) {
 
 export async function rejectContent(id: string) {
   const { data, error } = await supabase
-    .from("timeline_posts")
-    .update({ visibility: "private" }) // Atau status: 'rejected'
+    .from("contents")
+    .update({ status: "rejected" })
     .eq("id", id)
     .select()
     .single();
@@ -137,16 +134,16 @@ export async function rejectContent(id: string) {
 }
 
 export async function deleteContent(id: string) {
-  const { error } = await supabase.from("timeline_posts").delete().eq("id", id);
+  const { error } = await supabase.from("contents").delete().eq("id", id);
+
   if (error) throw error;
 }
 
 export async function getContentStats() {
-  // Menghitung konten yang visibility-nya masih pending/private
   const { count: pendingContents } = await supabase
-    .from("timeline_posts")
+    .from("contents")
     .select("*", { count: "exact", head: true })
-    .eq("visibility", "private"); // Sesuaikan logic pending
+    .eq("status", "pending");
 
   return {
     pendingContents: pendingContents || 0,
@@ -154,15 +151,13 @@ export async function getContentStats() {
 }
 
 // ============================================
-// MASJID POSTS (Masuk ke timeline_posts)
-// Category: 'Info Masjid'
+// MASJID POSTS QUERIES
 // ============================================
 
 export async function getMasjidPosts() {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("masjid_posts")
     .select("*")
-    .eq("category", "Info Masjid") // Filter kategori
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -172,17 +167,9 @@ export async function getMasjidPosts() {
 export async function createMasjidPost(
   post: Omit<MasjidPost, "id" | "created_at" | "updated_at">
 ) {
-  // Memastikan masuk sebagai Info Masjid & Usernya Admin
-  const { data: { user } } = await supabase.auth.getUser();
-  
   const { data, error } = await supabase
-    .from("timeline_posts")
-    .insert({
-      ...post,
-      user_id: user?.id, // ID Admin yang sedang login
-      category: "Info Masjid",
-      visibility: "public"
-    })
+    .from("masjid_posts")
+    .insert(post)
     .select()
     .single();
 
@@ -190,9 +177,12 @@ export async function createMasjidPost(
   return data as MasjidPost;
 }
 
-export async function updateMasjidPost(id: string, post: any) {
+export async function updateMasjidPost(
+  id: string,
+  post: Partial<Omit<MasjidPost, "id" | "created_at" | "updated_at">>
+) {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("masjid_posts")
     .update(post)
     .eq("id", id)
     .select()
@@ -203,38 +193,31 @@ export async function updateMasjidPost(id: string, post: any) {
 }
 
 export async function deleteMasjidPost(id: string) {
-  const { error } = await supabase.from("timeline_posts").delete().eq("id", id);
+  const { error } = await supabase.from("masjid_posts").delete().eq("id", id);
+
   if (error) throw error;
 }
 
 // ============================================
-// SCHEDULES (Masuk ke timeline_posts)
-// Category: 'Agenda'
+// SCHEDULES QUERIES
 // ============================================
 
 export async function getSchedules() {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("schedules")
     .select("*")
-    .eq("category", "Agenda")
-    .not("event_date", "is", null) // Pastikan ada tanggalnya
-    .order("event_date", { ascending: true });
+    .order("date", { ascending: true });
 
   if (error) throw error;
   return data as Schedule[];
 }
 
-export async function createSchedule(schedule: any) {
-  const { data: { user } } = await supabase.auth.getUser();
-
+export async function createSchedule(
+  schedule: Omit<Schedule, "id" | "created_at" | "updated_at">
+) {
   const { data, error } = await supabase
-    .from("timeline_posts")
-    .insert({
-      ...schedule,
-      user_id: user?.id,
-      category: "Agenda",
-      visibility: "public"
-    })
+    .from("schedules")
+    .insert(schedule)
     .select()
     .single();
 
@@ -242,9 +225,12 @@ export async function createSchedule(schedule: any) {
   return data as Schedule;
 }
 
-export async function updateSchedule(id: string, schedule: any) {
+export async function updateSchedule(
+  id: string,
+  schedule: Partial<Omit<Schedule, "id" | "created_at" | "updated_at">>
+) {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("schedules")
     .update(schedule)
     .eq("id", id)
     .select()
@@ -255,37 +241,31 @@ export async function updateSchedule(id: string, schedule: any) {
 }
 
 export async function deleteSchedule(id: string) {
-  const { error } = await supabase.from("timeline_posts").delete().eq("id", id);
+  const { error } = await supabase.from("schedules").delete().eq("id", id);
+
   if (error) throw error;
 }
 
 // ============================================
-// ARTICLES (Masuk ke timeline_posts)
-// Category: 'Artikel'
+// ARTICLES QUERIES
 // ============================================
 
 export async function getArticles() {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("articles")
     .select("*")
-    .eq("category", "Artikel")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data as Article[];
 }
 
-export async function createArticle(article: any) {
-  const { data: { user } } = await supabase.auth.getUser();
-
+export async function createArticle(
+  article: Omit<Article, "id" | "created_at" | "updated_at">
+) {
   const { data, error } = await supabase
-    .from("timeline_posts")
-    .insert({
-      ...article,
-      user_id: user?.id,
-      category: "Artikel",
-      visibility: "public"
-    })
+    .from("articles")
+    .insert(article)
     .select()
     .single();
 
@@ -293,9 +273,12 @@ export async function createArticle(article: any) {
   return data as Article;
 }
 
-export async function updateArticle(id: string, article: any) {
+export async function updateArticle(
+  id: string,
+  article: Partial<Omit<Article, "id" | "created_at" | "updated_at">>
+) {
   const { data, error } = await supabase
-    .from("timeline_posts")
+    .from("articles")
     .update(article)
     .eq("id", id)
     .select()
@@ -306,36 +289,31 @@ export async function updateArticle(id: string, article: any) {
 }
 
 export async function deleteArticle(id: string) {
-  const { error } = await supabase.from("timeline_posts").delete().eq("id", id);
+  const { error } = await supabase.from("articles").delete().eq("id", id);
+
   if (error) throw error;
 }
 
 // ============================================
-// DONATIONS (Tabel: donation_campaigns)
+// DONATIONS QUERIES
 // ============================================
 
 export async function getDonations() {
   const { data, error } = await supabase
-    .from("donation_campaigns")
-    .select(`
-      *,
-      creator:creator_id (name)
-    `)
+    .from("donations")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data as Donation[];
 }
 
-export async function createDonation(donation: any) {
-  const { data: { user } } = await supabase.auth.getUser();
-
+export async function createDonation(
+  donation: Omit<Donation, "id" | "created_at" | "updated_at">
+) {
   const { data, error } = await supabase
-    .from("donation_campaigns")
-    .insert({
-      ...donation,
-      creator_id: user?.id
-    })
+    .from("donations")
+    .insert(donation)
     .select()
     .single();
 
@@ -343,9 +321,12 @@ export async function createDonation(donation: any) {
   return data as Donation;
 }
 
-export async function updateDonation(id: string, donation: any) {
+export async function updateDonation(
+  id: string,
+  donation: Partial<Omit<Donation, "id" | "created_at" | "updated_at">>
+) {
   const { data, error } = await supabase
-    .from("donation_campaigns")
+    .from("donations")
     .update(donation)
     .eq("id", id)
     .select()
@@ -357,7 +338,7 @@ export async function updateDonation(id: string, donation: any) {
 
 export async function approveDonation(id: string) {
   const { data, error } = await supabase
-    .from("donation_campaigns")
+    .from("donations")
     .update({ status: "active" })
     .eq("id", id)
     .select()
@@ -369,8 +350,8 @@ export async function approveDonation(id: string) {
 
 export async function deactivateDonation(id: string) {
   const { data, error } = await supabase
-    .from("donation_campaigns")
-    .update({ status: "closed" }) // Sesuai check constraints di db setup
+    .from("donations")
+    .update({ status: "inactive" })
     .eq("id", id)
     .select()
     .single();
@@ -381,7 +362,7 @@ export async function deactivateDonation(id: string) {
 
 export async function getDonationStats() {
   const { count: activeDonations } = await supabase
-    .from("donation_campaigns")
+    .from("donations")
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
 

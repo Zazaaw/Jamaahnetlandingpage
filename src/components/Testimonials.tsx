@@ -8,7 +8,7 @@ const testimonials = [
     name: "Ahmad Fauzi",
     role: "Member Jamaah Al-Ikhlas",
     rating: 5,
-    text: "Alhamdulillah, aplikasi ini sangat membantu. Donasi jadi lebih mudah dan transparan. Fitur pasar jamaah juga memudahkan jual beli sesama muslim.",
+    text: "Alhamdulillah, aplikasi sangat membantu. Donasi jadi lebih mudah dan transparan. Fitur pasar jamaah memudahkan jual beli sesama muslim.",
     avatar: "AF",
   },
   {
@@ -16,7 +16,7 @@ const testimonials = [
     name: "Siti Nurhaliza",
     role: "Pengurus Masjid",
     rating: 5,
-    text: "Platform yang sangat bermanfaat untuk mengelola kegiatan masjid. Jadwal kajian dan pengumuman bisa tersampaikan dengan baik kepada jamaah.",
+    text: "Platform yang sangat bermanfaat untuk mengelola kegiatan masjid. Jadwal kajian dan pengumuman tersampaikan dengan baik kepada jamaah.",
     avatar: "SN",
   },
   {
@@ -32,7 +32,7 @@ const testimonials = [
     name: "Fatimah Azzahra",
     role: "Member Aktif",
     rating: 5,
-    text: "Senang sekali bisa berinteraksi dengan sesama muslim melalui aplikasi ini. Kontennya edukatif dan bermanfaat untuk meningkatkan ilmu agama.",
+    text: "Senang bisa berinteraksi dengan sesama muslim melalui aplikasi ini. Kontennya edukatif dan bermanfaat untuk meningkatkan ilmu agama.",
     avatar: "FA",
   },
   {
@@ -48,7 +48,7 @@ const testimonials = [
     name: "Khadijah Aminah",
     role: "Relawan Sosial",
     rating: 5,
-    text: "Aplikasi yang sangat recommended! Fitur donasi memudahkan kami menyalurkan bantuan kepada yang membutuhkan dengan cepat dan aman.",
+    text: "Aplikasi yang sangat recommended! Fitur donasi memudahkan menyalurkan bantuan kepada yang membutuhkan dengan cepat dan aman.",
     avatar: "KA",
   },
 ];
