@@ -62,8 +62,8 @@ Ikuti langkah-langkah berikut untuk menjalankan project di komputer lokal (Local
 Unduh source code ke komputer Anda:
 
 ```bash
-git clone [https://github.com/username-kamu/jamaah-net-landing.git](https://github.com/username-kamu/jamaah-net-landing.git)
-cd jamaah-net-landing
+git clone https://github.com/Zazaaw/Jamaahnetlandingpage.git
+cd jamaahnetlandingpage
 ```
 
 ### 2. Install Dependencies
@@ -86,7 +86,7 @@ npm run dev
 
 Project ini dikembangkan dengan ❤️ untuk kemajuan umat oleh:
 
-Ale - Lead Developer & Frontend Developer
-Faiz - UI/UX & Backend Logic
+- **Aleaa** - Lead Developer & Frontend Developer
+- **Faiz** - UI/UX & Backend Logic
 
 © 2026 Jamaah.net
