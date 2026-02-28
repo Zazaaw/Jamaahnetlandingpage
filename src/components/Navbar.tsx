@@ -82,7 +82,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             </button>
             <button
               onClick={handleLoginClick}
-              className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium shadow-md hover:shadow-lg cursor-pointer"
+              className="hidden px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium shadow-md hover:shadow-lg cursor-pointer"
               type="button"
             >
               Login Admin
@@ -133,7 +133,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
               </button>
               <button
                 onClick={handleLoginClick}
-                className="px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-left font-medium shadow-md cursor-pointer"
+                className="hidden px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-left font-medium shadow-md cursor-pointer"
                 type="button"
               >
                 Login Admin

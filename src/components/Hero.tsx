@@ -57,9 +57,9 @@ export function Hero({ onLoginClick }: HeroProps) {
                 </button>
                 <button
                   onClick={onLoginClick}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-emerald-600 border-2 border-emerald-600 rounded-lg hover:bg-emerald-50 transition-all"
+                  className="hidden inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-emerald-600 border-2 border-emerald-600 rounded-lg hover:bg-emerald-50 transition-all"
                 >
-                  <LogIn className="w-5 h-5" />
+                  <LogIn className="hidden w-5 h-5" />
                   Login Admin
                 </button>
               </div>
